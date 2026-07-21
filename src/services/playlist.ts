@@ -5,22 +5,21 @@ export interface PlaylistInfo {
   trackCount: number | null;
 }
 
-export interface PlaylistTrack {
-  id: string;
+export interface PlaylistArtist {
   name: string;
-  artists: string[];
   uri: string;
 }
 
-export interface PlaylistTrackPage {
-  tracks: PlaylistTrack[];
-  total: number;
-  hasMore: boolean;
-  debugDefinitions: string[];
+export interface PlaylistTrack {
+  id: string;
+  name: string;
+  artists: PlaylistArtist[];
+  uri: string;
 }
 
 interface SpotifyArtist {
   name?: string;
+  uri?: string;
 }
 
 interface SpotifyPlaylistItem {
@@ -98,8 +97,11 @@ function mapPlaylistItems(
       uri: item.uri ?? "",
       name: item.name ?? "Unknown track",
       artists: (item.artists ?? [])
-        .map(artist => artist.name)
-        .filter((name): name is string => Boolean(name)),
+        .filter(artist => Boolean(artist.name))
+        .map(artist => ({
+          name: artist.name ?? "Unknown artist",
+          uri: artist.uri ?? "",
+        })),
     }));
 }
 
@@ -128,35 +130,11 @@ export async function getAllPlaylistTracks(
     })) as SpotifyPlaylistContents;
 
     tracks.push(...mapPlaylistItems(page.items ?? []));
-    onProgress?.(Math.min(offset + batchSize, total), total);
+    onProgress?.(
+      Math.min(offset + batchSize, total),
+      total
+    );
   }
 
   return tracks;
-}
-
-export async function getPlaylistTracksFirstPage(
-  playlistId: string
-): Promise<PlaylistTrackPage> {
-  const api = (Spicetify.Platform as any).PlaylistAPI;
-  const playlistUri = `spotify:playlist:${playlistId}`;
-
-  const result = (await api.getContents(playlistUri, {
-    offset: 0,
-    limit: 5,
-  })) as SpotifyPlaylistContents;
-
-  const tracks = mapPlaylistItems(result.items ?? []);
-  const offset = result.offset ?? 0;
-  const limit = result.limit ?? tracks.length;
-  const total = result.totalLength ?? tracks.length;
-
-  return {
-    tracks,
-    total,
-    hasMore: offset + limit < total,
-    debugDefinitions: tracks.map(
-      track =>
-        `${track.name} — ${track.artists.join(", ") || "Unknown artist"}`
-    ),
-  };
 }

@@ -102,16 +102,29 @@ function createPlaylistModalContent(): HTMLDivElement {
         }
       );
 
-      const uniqueArtists = new Set(
-        tracks.flatMap(track => track.artists)
-      );
+      const artistsByUri = new Map<string, string>();
+
+      for (const track of tracks) {
+        for (const artist of track.artists) {
+          const key = artist.uri || artist.name.toLowerCase();
+
+          if (!artistsByUri.has(key)) {
+            artistsByUri.set(key, artist.name);
+          }
+        }
+      }
+
+      const artistsWithUris = [...artistsByUri.keys()].filter(
+        key => key.startsWith("spotify:artist:")
+      ).length;
 
       loadButton.textContent = "All tracks loaded";
 
       results.textContent =
         `Loaded ${tracks.length.toLocaleString()} tracks.\n` +
-        `Found ${uniqueArtists.size.toLocaleString()} unique artists.\n\n` +
-        `Next step: retrieve genre data for these artists.`;
+        `Found ${artistsByUri.size.toLocaleString()} unique artists.\n` +
+        `${artistsWithUris.toLocaleString()} artists have Spotify URIs.\n\n` +
+        `Next step: retrieve genre metadata.`;
 
       Spicetify.showNotification(
         `Loaded ${tracks.length.toLocaleString()} playlist tracks`
