@@ -1,29 +1,38 @@
-import { getCurrentPage } from "./services/spotify";
+import {
+  injectPlaylistPlusButton,
+  removePlaylistPlusButton,
+} from "./components/PlaylistButton";
 
 const wait = (milliseconds: number) =>
   new Promise(resolve => setTimeout(resolve, milliseconds));
 
 async function main() {
   while (
-    !Spicetify?.showNotification ||
-    !Spicetify?.Menu?.Item ||
-    !Spicetify?.Platform?.History
+    !Spicetify?.Platform?.History ||
+    !Spicetify?.PopupModal ||
+    !Spicetify?.showNotification
   ) {
     await wait(100);
   }
 
-  const playlistPlusMenu = new Spicetify.Menu.Item(
-    "Playlist+",
-    true,
-    () => {
-      const currentPage = getCurrentPage();
-      Spicetify.showNotification(`Playlist+ — ${currentPage}`);
-    },
-    "playlist"
-  );
+  const observer = new MutationObserver(() => {
+    injectPlaylistPlusButton();
+  });
 
-  playlistPlusMenu.register();
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true,
+  });
 
+  Spicetify.Platform.History.listen(() => {
+    removePlaylistPlusButton();
+
+    setTimeout(() => {
+      injectPlaylistPlusButton();
+    }, 500);
+  });
+
+  injectPlaylistPlusButton();
   Spicetify.showNotification("Playlist+ loaded!");
 }
 
