@@ -15,6 +15,7 @@ export interface PlaylistTrack {
   name: string;
   artists: PlaylistArtist[];
   uri: string;
+  album: string;
 }
 
 interface SpotifyArtist {
@@ -22,11 +23,16 @@ interface SpotifyArtist {
   uri?: string;
 }
 
+interface SpotifyAlbum {
+  name?: string;
+}
+
 interface SpotifyPlaylistItem {
   uid?: string;
   uri?: string;
   name?: string;
   artists?: SpotifyArtist[];
+  album?: SpotifyAlbum;
 }
 
 interface SpotifyPlaylistContents {
@@ -96,6 +102,7 @@ function mapPlaylistItems(
       id: item.uid ?? item.uri ?? "",
       uri: item.uri ?? "",
       name: item.name ?? "Unknown track",
+      album: item.album?.name ?? "",
       artists: (item.artists ?? [])
         .filter(artist => Boolean(artist.name))
         .map(artist => ({
@@ -130,6 +137,7 @@ export async function getAllPlaylistTracks(
     })) as SpotifyPlaylistContents;
 
     tracks.push(...mapPlaylistItems(page.items ?? []));
+
     onProgress?.(
       Math.min(offset + batchSize, total),
       total
