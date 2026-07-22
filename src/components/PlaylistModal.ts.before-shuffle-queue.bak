@@ -767,38 +767,9 @@ function renderGenreLens(
     }
   );
 
-  const shuffleQueueButton =
-    queueAllButton.cloneNode(
-      true
-    ) as HTMLButtonElement;
-
-  shuffleQueueButton.textContent =
-    "Shuffle queue";
-
-  shuffleQueueButton.addEventListener(
-    "mouseenter",
-    () => {
-      if (!shuffleQueueButton.disabled) {
-        shuffleQueueButton.style.background =
-          "rgba(74, 144, 226, 0.25)";
-      }
-    }
-  );
-
-  shuffleQueueButton.addEventListener(
-    "mouseleave",
-    () => {
-      if (!shuffleQueueButton.disabled) {
-        shuffleQueueButton.style.background =
-          "rgba(74, 144, 226, 0.14)";
-      }
-    }
-  );
-
   songsHeaderControls.append(
     matchCount,
-    queueAllButton,
-    shuffleQueueButton
+    queueAllButton
   );
 
   songsHeader.append(
@@ -1173,250 +1144,111 @@ function renderGenreLens(
     }
   );
 
-  async function queueFilteredTracks(
-    button: HTMLButtonElement,
-    shouldShuffle: boolean
-  ): Promise<void> {
-    const filteredTracks =
-      getFilteredTracks();
+  queueAllButton.addEventListener(
+    "click",
+    async () => {
+      const filteredTracks =
+        getFilteredTracks();
 
-    const playingUri =
-      getNowPlayingUri();
+      const playingUri =
+        getNowPlayingUri();
 
-    const playingIndex =
-      filteredTracks.findIndex(
-        item =>
-          item.track.uri === playingUri
-      );
+      const playingIndex =
+        filteredTracks.findIndex(
+          item =>
+            item.track.uri === playingUri
+        );
 
-    const tracksToQueue =
-      playingIndex >= 0
-        ? filteredTracks.slice(
-            playingIndex + 1
-          )
-        : filteredTracks.filter(
-            item =>
-              item.track.uri !== playingUri
-          );
+      const tracksAfterCurrent =
+        playingIndex >= 0
+          ? filteredTracks.slice(
+              playingIndex + 1
+            )
+          : filteredTracks.filter(
+              item =>
+                item.track.uri !== playingUri
+            );
 
-    const uniqueUris = [
-      ...new Set(
-        tracksToQueue
-          .map(item => item.track.uri)
-          .filter(
-            (uri): uri is string =>
-              Boolean(uri)
-          )
-      ),
-    ];
-
-    if (shouldShuffle) {
-      for (
-        let index = uniqueUris.length - 1;
-        index > 0;
-        index -= 1
-      ) {
-        const randomIndex =
-          Math.floor(
-            Math.random() * (index + 1)
-          );
-
-        [
-          uniqueUris[index],
-          uniqueUris[randomIndex],
-        ] = [
-          uniqueUris[randomIndex],
-          uniqueUris[index],
-        ];
-      }
-    }
-
-    if (uniqueUris.length === 0) {
-      Spicetify.showNotification(
-        "There are no matching songs left to queue."
-      );
-
-      return;
-    }
-
-    queueAllButton.disabled = true;
-    shuffleQueueButton.disabled = true;
-
-    queueAllButton.style.cursor =
-      "default";
-
-    shuffleQueueButton.style.cursor =
-      "default";
-
-    queueAllButton.style.opacity =
-      "0.65";
-
-    shuffleQueueButton.style.opacity =
-      "0.65";
-
-    button.textContent =
-      shouldShuffle
-        ? "Shuffling..."
-        : "Queueing...";
-
-    try {
-      const previouslyQueuedUris = [
-        ...queuedTrackUris,
+      const uniqueUris = [
+        ...new Set(
+          tracksAfterCurrent
+            .map(item => item.track.uri)
+            .filter(
+              (uri): uri is string =>
+                Boolean(uri)
+            )
+        ),
       ];
 
-      if (previouslyQueuedUris.length > 0) {
-        const removalBatchSize = 100;
+      if (uniqueUris.length === 0) {
+        Spicetify.showNotification(
+          "There are no matching songs left to queue."
+        );
+
+        return;
+      }
+
+      queueAllButton.disabled = true;
+      queueAllButton.style.cursor =
+        "default";
+      queueAllButton.style.opacity =
+        "0.65";
+      queueAllButton.textContent =
+        "Queueing...";
+
+      try {
+        const batchSize = 100;
 
         for (
           let index = 0;
-          index < previouslyQueuedUris.length;
-          index += removalBatchSize
+          index < uniqueUris.length;
+          index += batchSize
         ) {
-          const removalBatch =
-            previouslyQueuedUris
+          const batch =
+            uniqueUris
               .slice(
                 index,
-                index + removalBatchSize
+                index + batchSize
               )
               .map(uri => ({ uri }));
 
-          await Spicetify.removeFromQueue(
-            removalBatch
+          await Spicetify.addToQueue(
+            batch
           );
         }
 
         queuedTrackUris.clear();
+
+        for (const uri of uniqueUris) {
+          queuedTrackUris.add(uri);
+        }
+
         refreshNowPlayingHighlight();
-      }
 
-      const batchSize = 100;
-
-      for (
-        let index = 0;
-        index < uniqueUris.length;
-        index += batchSize
-      ) {
-        const batch =
-          uniqueUris
-            .slice(
-              index,
-              index + batchSize
-            )
-            .map(uri => ({ uri }));
-
-        await Spicetify.addToQueue(
-          batch
+        Spicetify.showNotification(
+          `${uniqueUris.length.toLocaleString()} songs added to queue.`
         );
+      } catch (error) {
+        console.error(
+          "[Playlist+] Could not queue filtered songs:",
+          error
+        );
+
+        Spicetify.showNotification(
+          "Could not add the matching songs to the queue.",
+          true
+        );
+      } finally {
+        queueAllButton.disabled = false;
+        queueAllButton.style.cursor =
+          "pointer";
+        queueAllButton.style.opacity =
+          "1";
+        queueAllButton.textContent =
+          "Queue all";
       }
-
-      queuedTrackUris.clear();
-
-      for (const uri of uniqueUris) {
-        queuedTrackUris.add(uri);
-      }
-
-      refreshNowPlayingHighlight();
-
-      Spicetify.showNotification(
-        shouldShuffle
-          ? `${uniqueUris.length.toLocaleString()} shuffled songs added to queue.`
-          : `${uniqueUris.length.toLocaleString()} songs added to queue.`
-      );
-    } catch (error) {
-      console.error(
-        "[Playlist+] Could not queue filtered songs:",
-        error
-      );
-
-      Spicetify.showNotification(
-        "Could not add the matching songs to the queue.",
-        true
-      );
-    } finally {
-      queueAllButton.disabled = false;
-      shuffleQueueButton.disabled = false;
-
-      queueAllButton.style.cursor =
-        "pointer";
-
-      shuffleQueueButton.style.cursor =
-        "pointer";
-
-      queueAllButton.style.opacity =
-        "1";
-
-      shuffleQueueButton.style.opacity =
-        "1";
-
-      queueAllButton.textContent =
-        "Queue all";
-
-      shuffleQueueButton.textContent =
-        "Shuffle queue";
-    }
-  }
-
-  queueAllButton.addEventListener(
-    "click",
-    () => {
-      void queueFilteredTracks(
-        queueAllButton,
-        false
-      );
     }
   );
-
-  shuffleQueueButton.addEventListener(
-    "click",
-    () => {
-      void queueFilteredTracks(
-        shuffleQueueButton,
-        true
-      );
-    }
-  );
-
-  function getQueuedTrackUri(
-    item: any
-  ): string | null {
-    const possibleUris = [
-      item?.uri,
-      item?.contextTrack?.uri,
-      item?.track?.uri,
-      item?.item?.uri,
-    ];
-
-    for (const uri of possibleUris) {
-      if (
-        typeof uri === "string" &&
-        uri.length > 0
-      ) {
-        return uri;
-      }
-    }
-
-    return null;
-  }
-
-  function syncQueuedTrackUrisWithSpotifyQueue():
-    void {
-    const actualQueuedUris = new Set(
-      (Spicetify.Queue?.nextTracks ?? [])
-        .map(getQueuedTrackUri)
-        .filter(
-          (uri): uri is string =>
-            Boolean(uri)
-        )
-    );
-
-    for (const uri of [
-      ...queuedTrackUris,
-    ]) {
-      if (!actualQueuedUris.has(uri)) {
-        queuedTrackUris.delete(uri);
-      }
-    }
-  }
 
   container.append(
     headingRow,
@@ -1429,7 +1261,6 @@ function renderGenreLens(
     loadMoreButton
   );
 
-  syncQueuedTrackUrisWithSpotifyQueue();
   refresh();
 }
 
@@ -1760,9 +1591,6 @@ export function openPlaylistModal(): void {
     );
   }, 50);
 }
-
-
-
 
 
 

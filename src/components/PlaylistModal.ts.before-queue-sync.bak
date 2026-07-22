@@ -1376,48 +1376,6 @@ function renderGenreLens(
     }
   );
 
-  function getQueuedTrackUri(
-    item: any
-  ): string | null {
-    const possibleUris = [
-      item?.uri,
-      item?.contextTrack?.uri,
-      item?.track?.uri,
-      item?.item?.uri,
-    ];
-
-    for (const uri of possibleUris) {
-      if (
-        typeof uri === "string" &&
-        uri.length > 0
-      ) {
-        return uri;
-      }
-    }
-
-    return null;
-  }
-
-  function syncQueuedTrackUrisWithSpotifyQueue():
-    void {
-    const actualQueuedUris = new Set(
-      (Spicetify.Queue?.nextTracks ?? [])
-        .map(getQueuedTrackUri)
-        .filter(
-          (uri): uri is string =>
-            Boolean(uri)
-        )
-    );
-
-    for (const uri of [
-      ...queuedTrackUris,
-    ]) {
-      if (!actualQueuedUris.has(uri)) {
-        queuedTrackUris.delete(uri);
-      }
-    }
-  }
-
   container.append(
     headingRow,
     controls,
@@ -1429,7 +1387,6 @@ function renderGenreLens(
     loadMoreButton
   );
 
-  syncQueuedTrackUrisWithSpotifyQueue();
   refresh();
 }
 
@@ -1760,7 +1717,6 @@ export function openPlaylistModal(): void {
     );
   }, 50);
 }
-
 
 
 

@@ -1260,35 +1260,6 @@ function renderGenreLens(
         : "Queueing...";
 
     try {
-      const previouslyQueuedUris = [
-        ...queuedTrackUris,
-      ];
-
-      if (previouslyQueuedUris.length > 0) {
-        const removalBatchSize = 100;
-
-        for (
-          let index = 0;
-          index < previouslyQueuedUris.length;
-          index += removalBatchSize
-        ) {
-          const removalBatch =
-            previouslyQueuedUris
-              .slice(
-                index,
-                index + removalBatchSize
-              )
-              .map(uri => ({ uri }));
-
-          await Spicetify.removeFromQueue(
-            removalBatch
-          );
-        }
-
-        queuedTrackUris.clear();
-        refreshNowPlayingHighlight();
-      }
-
       const batchSize = 100;
 
       for (
@@ -1376,48 +1347,6 @@ function renderGenreLens(
     }
   );
 
-  function getQueuedTrackUri(
-    item: any
-  ): string | null {
-    const possibleUris = [
-      item?.uri,
-      item?.contextTrack?.uri,
-      item?.track?.uri,
-      item?.item?.uri,
-    ];
-
-    for (const uri of possibleUris) {
-      if (
-        typeof uri === "string" &&
-        uri.length > 0
-      ) {
-        return uri;
-      }
-    }
-
-    return null;
-  }
-
-  function syncQueuedTrackUrisWithSpotifyQueue():
-    void {
-    const actualQueuedUris = new Set(
-      (Spicetify.Queue?.nextTracks ?? [])
-        .map(getQueuedTrackUri)
-        .filter(
-          (uri): uri is string =>
-            Boolean(uri)
-        )
-    );
-
-    for (const uri of [
-      ...queuedTrackUris,
-    ]) {
-      if (!actualQueuedUris.has(uri)) {
-        queuedTrackUris.delete(uri);
-      }
-    }
-  }
-
   container.append(
     headingRow,
     controls,
@@ -1429,7 +1358,6 @@ function renderGenreLens(
     loadMoreButton
   );
 
-  syncQueuedTrackUrisWithSpotifyQueue();
   refresh();
 }
 
@@ -1760,8 +1688,6 @@ export function openPlaylistModal(): void {
     );
   }, 50);
 }
-
-
 
 
 
