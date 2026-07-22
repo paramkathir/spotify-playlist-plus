@@ -830,24 +830,6 @@ function renderGenreLens(
     }
   );
 
-  for (const button of [
-    queueAllButton,
-    shuffleQueueButton,
-  ]) {
-    for (const eventName of [
-      "pointerdown",
-      "mousedown",
-      "click",
-    ]) {
-      button.addEventListener(
-        eventName,
-        event => {
-          event.stopPropagation();
-        }
-      );
-    }
-  }
-
   songsHeaderControls.append(
     matchCount,
     queueAllButton,
@@ -1899,7 +1881,6 @@ export function openPlaylistModal(): void {
     );
   }, 50);
 }
-
 
 
 

@@ -830,24 +830,6 @@ function renderGenreLens(
     }
   );
 
-  for (const button of [
-    queueAllButton,
-    shuffleQueueButton,
-  ]) {
-    for (const eventName of [
-      "pointerdown",
-      "mousedown",
-      "click",
-    ]) {
-      button.addEventListener(
-        eventName,
-        event => {
-          event.stopPropagation();
-        }
-      );
-    }
-  }
-
   songsHeaderControls.append(
     matchCount,
     queueAllButton,
@@ -1226,44 +1208,6 @@ function renderGenreLens(
     }
   );
 
-  function setQueueButtonContent(
-    button: HTMLButtonElement,
-    icon: string,
-    label: string
-  ): void {
-    button.innerHTML =
-      `${icon}<span>${label}</span>`;
-
-    const svg =
-      button.querySelector("svg");
-
-    if (svg) {
-      svg.setAttribute(
-        "width",
-        "13"
-      );
-
-      svg.setAttribute(
-        "height",
-        "13"
-      );
-
-      svg.style.flexShrink = "0";
-      svg.style.fill = "currentColor";
-    }
-  }
-
-  function wait(
-    milliseconds: number
-  ): Promise<void> {
-    return new Promise(resolve => {
-      window.setTimeout(
-        resolve,
-        milliseconds
-      );
-    });
-  }
-
   async function queueFilteredTracks(
     button: HTMLButtonElement,
     shouldShuffle: boolean
@@ -1345,15 +1289,10 @@ function renderGenreLens(
     shuffleQueueButton.style.opacity =
       "0.65";
 
-    setQueueButtonContent(
-      button,
-      shouldShuffle
-        ? Spicetify.SVGIcons.shuffle
-        : Spicetify.SVGIcons.queue,
+    button.textContent =
       shouldShuffle
         ? "Shuffling..."
-        : "Queueing..."
-    );
+        : "Queueing...";
 
     try {
       const previouslyQueuedUris = [
@@ -1418,25 +1357,6 @@ function renderGenreLens(
           ? `${uniqueUris.length.toLocaleString()} shuffled songs added to queue.`
           : `${uniqueUris.length.toLocaleString()} songs added to queue.`
       );
-
-      setQueueButtonContent(
-        button,
-        Spicetify.SVGIcons.check,
-        shouldShuffle
-          ? "Shuffled"
-          : "Queued"
-      );
-
-      button.style.border =
-        "1px solid rgba(30, 215, 96, 0.55)";
-
-      button.style.background =
-        "rgba(30, 215, 96, 0.12)";
-
-      button.style.color =
-        "#1ed760";
-
-      await wait(900);
     } catch (error) {
       console.error(
         "[Playlist+] Could not queue filtered songs:",
@@ -1463,35 +1383,11 @@ function renderGenreLens(
       shuffleQueueButton.style.opacity =
         "1";
 
-      queueAllButton.style.border =
-        "1px solid rgba(74, 144, 226, 0.45)";
+      queueAllButton.textContent =
+        "Queue";
 
-      shuffleQueueButton.style.border =
-        "1px solid rgba(74, 144, 226, 0.45)";
-
-      queueAllButton.style.background =
-        "rgba(74, 144, 226, 0.08)";
-
-      shuffleQueueButton.style.background =
-        "rgba(74, 144, 226, 0.08)";
-
-      queueAllButton.style.color =
-        "#69a9f5";
-
-      shuffleQueueButton.style.color =
-        "#69a9f5";
-
-      setQueueButtonContent(
-        queueAllButton,
-        Spicetify.SVGIcons.queue,
-        "Queue"
-      );
-
-      setQueueButtonContent(
-        shuffleQueueButton,
-        Spicetify.SVGIcons.shuffle,
-        "Shuffle"
-      );
+      shuffleQueueButton.textContent =
+        "Shuffle";
     }
   }
 
@@ -1899,8 +1795,6 @@ export function openPlaylistModal(): void {
     );
   }, 50);
 }
-
-
 
 
 
