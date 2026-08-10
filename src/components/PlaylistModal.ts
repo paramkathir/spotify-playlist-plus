@@ -1,3 +1,7 @@
+import {
+  createGenrePresetsSection,
+} from "./GenrePresets";
+
 ﻿import {
   getAllPlaylistTracks,
   getCurrentPlaylist,
@@ -8,6 +12,10 @@ import {
 } from "../services/genres";
 
 type MatchMode = "any" | "all";
+
+type PlaylistOrder =
+  | "original"
+  | "grouped";
 
 function createElement<K extends keyof HTMLElementTagNameMap>(
   tag: K,
@@ -527,6 +535,9 @@ function renderGenreLens(
   >();
 
   let matchMode: MatchMode = "any";
+  let playlistOrder: PlaylistOrder =
+    "original";
+
   let visibleLimit = 100;
 
   const classifiedCount =
@@ -672,6 +683,117 @@ function renderGenreLens(
     "var(--spice-subtext, #b3b3b3)";
   modeExplanation.style.fontSize = "11px";
 
+  const orderSection =
+    createElement("div");
+
+  orderSection.style.display = "flex";
+  orderSection.style.alignItems =
+    "center";
+  orderSection.style.justifyContent =
+    "space-between";
+  orderSection.style.flexWrap = "wrap";
+  orderSection.style.gap = "10px";
+  orderSection.style.marginTop = "18px";
+  orderSection.style.marginBottom = "4px";
+
+  const orderLabel = createElement(
+    "div",
+    "Playlist view"
+  );
+
+  orderLabel.style.color =
+    "var(--spice-subtext, #b3b3b3)";
+
+  orderLabel.style.fontSize = "12px";
+  orderLabel.style.fontWeight = "700";
+
+  const orderButtonGroup =
+    createElement("div");
+
+  orderButtonGroup.style.display = "flex";
+  orderButtonGroup.style.alignItems =
+    "center";
+  orderButtonGroup.style.flexWrap = "wrap";
+  orderButtonGroup.style.gap = "6px";
+  orderButtonGroup.style.padding = "3px";
+  orderButtonGroup.style.border =
+    "1px solid rgba(255,255,255,0.1)";
+  orderButtonGroup.style.borderRadius =
+    "999px";
+  orderButtonGroup.style.background =
+    "rgba(255,255,255,0.04)";
+
+  function createOrderButton(
+    label: string,
+    order: PlaylistOrder
+  ): HTMLButtonElement {
+    const button = createElement(
+      "button",
+      label
+    );
+
+    button.type = "button";
+    button.dataset.playlistOrder = order;
+    button.style.padding = "7px 11px";
+    button.style.border = "none";
+    button.style.borderRadius = "999px";
+    button.style.background =
+      "transparent";
+    button.style.color =
+      "var(--spice-subtext, #b3b3b3)";
+    button.style.fontFamily = "inherit";
+    button.style.fontSize = "11px";
+    button.style.fontWeight = "700";
+    button.style.cursor = "pointer";
+    button.style.transition =
+      "background 120ms ease, color 120ms ease";
+
+    for (const eventName of [
+      "pointerdown",
+      "mousedown",
+      "click",
+    ]) {
+      button.addEventListener(
+        eventName,
+        event => {
+          event.stopPropagation();
+        }
+      );
+    }
+
+    button.addEventListener(
+      "click",
+      () => {
+        playlistOrder = order;
+        visibleLimit = 100;
+        refresh();
+      }
+    );
+
+    return button;
+  }
+
+  const originalOrderButton =
+    createOrderButton(
+      "Original playlist",
+      "original"
+    );
+
+  const groupedOrderButton =
+    createOrderButton(
+      "Group by genre",
+      "grouped"
+    );
+
+  orderButtonGroup.append(
+    originalOrderButton,
+    groupedOrderButton
+  );
+
+  orderSection.append(
+    orderLabel,
+    orderButtonGroup
+  );
   const genresGrid = createElement("div");
 
   genresGrid.style.display = "grid";
@@ -679,6 +801,20 @@ function renderGenreLens(
     "repeat(4, minmax(0, 1fr))";
   genresGrid.style.gap = "10px";
   genresGrid.style.marginTop = "14px";
+
+  const presetsSection =
+    createGenrePresetsSection({
+      allGenres,
+      selectedGenres,
+      getMatchMode: () => matchMode,
+      setMatchMode: mode => {
+        matchMode = mode;
+      },
+      onFiltersChanged: () => {
+        visibleLimit = 100;
+        refresh();
+      },
+    });
 
   const songsHeader = createElement("div");
 
@@ -700,8 +836,18 @@ function renderGenreLens(
   songsHeading.style.margin = "0";
   songsHeading.style.fontSize = "20px";
 
-  const songsHeaderControls =
-    createElement("div");
+  const songsHeaderCenter =
+  createElement("div");
+
+songsHeaderCenter.style.flex = "1";
+songsHeaderCenter.style.textAlign = "center";
+songsHeaderCenter.style.fontWeight = "700";
+songsHeaderCenter.style.fontSize = "14px";
+songsHeaderCenter.style.color =
+  "var(--spice-button, #1ed760)";
+
+const songsHeaderControls =
+  createElement("div");
 
   songsHeaderControls.style.display =
     "flex";
@@ -855,9 +1001,10 @@ function renderGenreLens(
   );
 
   songsHeader.append(
-    songsHeading,
-    songsHeaderControls
-  );
+  songsHeading,
+  songsHeaderCenter,
+  songsHeaderControls
+);
 
   const songsList = createElement("div");
 
@@ -916,13 +1063,119 @@ function renderGenreLens(
     );
   }
 
-  function getFilteredTracks():
-    ClassifiedTrack[] {
-    return classifications.filter(
-      trackMatchesSelection
+  const originalTrackPositions =
+    new Map<ClassifiedTrack, number>(
+      classifications.map(
+        (item, index) => [
+          item,
+          index,
+        ]
+      )
     );
+
+  function getTrackGroupGenre(
+    item: ClassifiedTrack
+  ): string {
+    const trackGenres =
+      getTrackGenres(item);
+
+    if (selectedGenres.size > 0) {
+      const matchingSelectedGenres =
+        [...selectedGenres]
+          .filter(
+            genre =>
+              trackGenres.includes(genre)
+          )
+          .sort(
+            (first, second) =>
+              first.localeCompare(
+                second,
+                undefined,
+                {
+                  sensitivity: "base",
+                }
+              )
+          );
+
+      if (
+        matchingSelectedGenres.length > 0
+      ) {
+        return matchingSelectedGenres[0];
+      }
+    }
+
+    const primaryGenre =
+      item.primaryGenre?.trim();
+
+    if (primaryGenre) {
+      return primaryGenre;
+    }
+
+    return "Unknown genre";
   }
 
+  function getFilteredTracks():
+    ClassifiedTrack[] {
+    const filteredTracks =
+      classifications.filter(
+        trackMatchesSelection
+      );
+
+    if (playlistOrder === "original") {
+      return filteredTracks;
+    }
+
+    return [...filteredTracks].sort(
+      (first, second) => {
+        const firstGroup =
+          getTrackGroupGenre(first);
+
+        const secondGroup =
+          getTrackGroupGenre(second);
+
+        const firstIsUnknown =
+          firstGroup === "Unknown genre";
+
+        const secondIsUnknown =
+          secondGroup === "Unknown genre";
+
+        if (
+          firstIsUnknown &&
+          !secondIsUnknown
+        ) {
+          return 1;
+        }
+
+        if (
+          !firstIsUnknown &&
+          secondIsUnknown
+        ) {
+          return -1;
+        }
+
+        const groupComparison =
+          firstGroup.localeCompare(
+            secondGroup,
+            undefined,
+            {
+              sensitivity: "base",
+            }
+          );
+
+        if (groupComparison !== 0) {
+          return groupComparison;
+        }
+
+        return (
+          originalTrackPositions.get(first) ??
+          0
+        ) - (
+          originalTrackPositions.get(second) ??
+          0
+        );
+      }
+    );
+  }
   function buildDynamicGenreCounts(
     currentMatches: ClassifiedTrack[]
   ): Map<string, number> {
@@ -948,6 +1201,28 @@ function renderGenreLens(
     return counts;
   }
 
+  function updateOrderButtons(): void {
+    const buttons = [
+      originalOrderButton,
+      groupedOrderButton,
+    ];
+
+    for (const button of buttons) {
+      const selected =
+        button.dataset.playlistOrder ===
+        playlistOrder;
+
+      button.style.background =
+        selected
+          ? "var(--spice-button, #1ed760)"
+          : "transparent";
+
+      button.style.color =
+        selected
+          ? "#000000"
+          : "var(--spice-subtext, #b3b3b3)";
+    }
+  }
   function updateModeButtons(): void {
     const anySelected =
       matchMode === "any";
@@ -1050,9 +1325,118 @@ function renderGenreLens(
         visibleLimit
       );
 
+    let previousGenreGroup:
+      string | null = null;
+
     for (const item of tracksToRender) {
+      if (playlistOrder === "grouped") {
+        const currentGenreGroup =
+          getTrackGroupGenre(item);
+
+        if (
+          currentGenreGroup !==
+          previousGenreGroup
+        ) {
+          const groupHeader =
+            createElement(
+              "div",
+              currentGenreGroup
+            );
+
+          groupHeader.style.display =
+            "flex";
+
+          groupHeader.style.alignItems =
+            "center";
+
+          groupHeader.style.gap = "10px";
+          groupHeader.style.marginTop =
+            previousGenreGroup === null
+              ? "4px"
+              : "22px";
+
+          groupHeader.style.marginBottom =
+            "7px";
+
+          groupHeader.style.padding =
+            "0 4px";
+
+          groupHeader.style.color =
+            "var(--spice-text, #ffffff)";
+
+          groupHeader.style.fontSize =
+            "15px";
+
+          groupHeader.style.fontWeight =
+            "800";
+
+          const groupCount =
+            filteredTracks.filter(
+              track =>
+                getTrackGroupGenre(track) ===
+                currentGenreGroup
+            ).length;
+
+          const countBadge =
+            createElement(
+              "span",
+              groupCount.toLocaleString()
+            );
+
+          countBadge.style.display =
+            "inline-flex";
+
+          countBadge.style.alignItems =
+            "center";
+
+          countBadge.style.justifyContent =
+            "center";
+
+          countBadge.style.minWidth =
+            "22px";
+
+          countBadge.style.height = "22px";
+          countBadge.style.padding =
+            "0 7px";
+
+          countBadge.style.borderRadius =
+            "999px";
+
+          countBadge.style.background =
+            "rgba(255,255,255,0.1)";
+
+          countBadge.style.color =
+            "var(--spice-subtext, #b3b3b3)";
+
+          countBadge.style.fontSize =
+            "11px";
+
+          countBadge.style.fontWeight =
+            "700";
+
+          groupHeader.append(countBadge);
+          songsList.append(groupHeader);
+
+          previousGenreGroup =
+            currentGenreGroup;
+        }
+      }
+
       const row =
         createSongRow(item);
+
+      if (selectedGenres.size > 0) {
+        const rowChildren =
+          Array.from(row.children);
+
+        const pills =
+          rowChildren[rowChildren.length - 1] as
+            HTMLElement | undefined;
+
+        if (pills) {
+          pills.style.display = "none";
+        }
+      }
 
       const title =
         row.querySelector<HTMLDivElement>(
@@ -1075,8 +1459,16 @@ function renderGenreLens(
       songsList.append(row);
     }
 
-    matchCount.textContent =
-      `${filteredTracks.length.toLocaleString()} matching songs`;
+    const selected =
+  [...selectedGenres];
+
+songsHeaderCenter.textContent =
+  selected.length === 0
+    ? ""
+    : selected.join(" • ");
+
+matchCount.textContent =
+  `${filteredTracks.length.toLocaleString()} matching song${filteredTracks.length === 1 ? "" : "s"}`;
 
     emptyState.style.display =
       filteredTracks.length === 0
@@ -1104,6 +1496,7 @@ function renderGenreLens(
       getFilteredTracks();
 
     updateModeButtons();
+    updateOrderButtons();
     updateSelectionLabel();
     updateGenreCards(
       filteredTracks
@@ -1561,6 +1954,8 @@ function renderGenreLens(
     headingRow,
     controls,
     modeExplanation,
+    presetsSection,
+    orderSection,
     genresGrid,
     songsHeader,
     songsList,
@@ -1899,6 +2294,10 @@ export function openPlaylistModal(): void {
     );
   }, 50);
 }
+
+
+
+
 
 
 

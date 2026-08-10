@@ -33,7 +33,7 @@ export interface ClassifiedTrack {
 }
 
 interface CachedClassification {
-  cacheVersion: 3;
+  cacheVersion: 4;
   uri: string;
   title: string;
   artist: string;
@@ -46,7 +46,7 @@ interface CachedClassification {
 }
 
 const CACHE_PREFIX =
-  "playlist-plus:classification:v3:";
+  "playlist-plus:classification:v4:";
 
 function normalizeText(value: string): string {
   return value
@@ -97,7 +97,7 @@ function createCacheEntry(
   genreScores: GenreScore[]
 ): CachedClassification {
   return {
-    cacheVersion: 3,
+    cacheVersion: 4,
     uri: track.uri,
     title: track.name,
     artist: primaryArtist,
@@ -227,7 +227,7 @@ function readCache(
       JSON.parse(raw) as CachedClassification;
 
     if (
-      cached.cacheVersion !== 3 ||
+      cached.cacheVersion !== 4 ||
       cached.uri !== track.uri
     ) {
       return null;
@@ -415,4 +415,6 @@ export async function classifyTracks(
 
   return results;
 }
+
+
 

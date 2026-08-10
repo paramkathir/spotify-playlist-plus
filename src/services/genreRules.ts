@@ -1,4 +1,4 @@
-export const GENRE_ALIASES: Record<string, string> = {
+﻿export const GENRE_ALIASES: Record<string, string> = {
   "hip hop": "Hip-Hop",
   "hip-hop": "Hip-Hop",
   "hiphop": "Hip-Hop",
@@ -74,7 +74,7 @@ export const GENRE_ALIASES: Record<string, string> = {
   "techno": "Techno",
   "trance": "Trance",
 
-  "afrobeats": "Afrobeats",
+  "afrobeats": "Afrobeat",
   "afrobeat": "Afrobeat",
   "amapiano": "Amapiano",
   "dancehall": "Dancehall",
@@ -144,3 +144,4 @@ export const JUNK_TAGS = new Set([
   "ovo",
   "explicit"
 ]);
+
