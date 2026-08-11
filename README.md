@@ -1,58 +1,75 @@
 # Playlist+
 
-A Spotify playlist management extension for Spicetify built with TypeScript.
+Advanced Spotify playlist management for Spicetify.
 
-Playlist+ makes large Spotify playlists easier to explore by classifying tracks by genre and giving users tools to filter, group, queue, shuffle, and save reusable genre presets without modifying the original playlist.
+Playlist+ transforms large Spotify playlists into an interactive browsing experience with intelligent genre classification, powerful filtering, smart queue controls, and reusable genre presets.
+
+---
 
 ## Features
 
-- Genre classification using Last.fm metadata
-- Multi-genre filtering
-- Match Any and Match All filtering modes
-- Dynamic genre counts
-- Group songs by genre
-- Queue all matching songs
-- Shuffle matching songs
-- Now-playing and queue highlighting
-- Persistent classification caching
-- Saved genre presets
-- Create, edit, rename, and delete presets
-- Searchable genre picker
-- Designed to work with playlists containing thousands of tracks
+- 🎵 Intelligent genre classification using Last.fm
+- 🔍 Filter playlists by one or multiple genres
+- ⚡ Match Any / Match All filtering
+- 📚 Queue every matching song
+- 🔀 Shuffle only matching songs
+- 💾 Saved genre presets
+- 🚀 Persistent genre cache for fast loading
+- 📈 Supports playlists with thousands of tracks
+
+---
+
+## Screenshots
+
+### Playlist Overview
+
+![Playlist Overview](images/playlist-overview.png)
+
+---
+
+### Genre Lens
+
+![Genre Lens](images/genre-lens.png)
+
+---
+
+### Filtered Songs
+
+![Filtered Songs](images/filtered-songs.png)
+
+---
 
 ## Tech Stack
 
 - TypeScript
 - Spicetify API
 - Last.fm API
-- Spotify Desktop
 - LocalStorage
-- Node.js
-- Spicetify Creator
+- Spotify Desktop
+
+---
 
 ## Why I Built It
 
-Spotify playlists can become difficult to navigate once they contain hundreds or thousands of songs.
+Spotify makes it easy to build huge playlists, but difficult to explore them.
 
-I wanted a way to explore a playlist by genre without permanently reorganizing or splitting the original playlist. Playlist+ adds a Genre Lens directly inside Spotify that lets users temporarily reshape how they browse and queue their music.
+I wanted to browse playlists by genre without permanently reorganizing them or creating dozens of separate playlists.
 
-## Engineering Highlights
+Playlist+ adds a Genre Lens directly inside Spotify that lets users temporarily reorganize, filter, queue, and shuffle music based on genre while leaving the original playlist untouched.
 
-- Built a persistent caching layer to avoid repeated Last.fm classification requests
-- Added genre normalization to merge inconsistent metadata into a cleaner taxonomy
-- Implemented queue synchronization with Spotify's current playback state
-- Designed reusable preset storage and editing components
-- Added filtering modes for both union and intersection-based genre matching
-- Optimized the interface for very large playlists
+---
 
-## Status
+## Future Plans
 
-Playlist+ is currently under active development.
+- Custom genre collections
+- Playlist statistics
+- Genre analytics
+- Similar artist recommendations
+- Better classification engine
+- Additional sorting modes
+
+---
 
 ## Author
 
-Built by [Param Kathiravan](https://github.com/paramkathir).
-
-## Disclaimer
-
-Playlist+ is an independent project and is not affiliated with Spotify, Last.fm, or Spicetify.
+Built by **Param Kathiravan**.
