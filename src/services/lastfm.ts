@@ -1,4 +1,4 @@
-import { LASTFM_API_KEY } from "../config";
+﻿import { requireLastFmApiKey } from "../config";
 
 interface LastFmTag {
   name?: string;
@@ -25,7 +25,7 @@ async function requestTopTags(
     "https://ws.audioscrobbler.com/2.0/?" +
     new URLSearchParams({
       ...params,
-      api_key: LASTFM_API_KEY,
+      api_key: requireLastFmApiKey(),
       autocorrect: "1",
       format: "json",
     });
@@ -95,3 +95,4 @@ export async function getArtistGenres(
 
   return tags.map(tag => tag.name);
 }
+
