@@ -1,9 +1,12 @@
 # Playlist+
 
+<p align="center">
+  <img src="images/banner.png" alt="Playlist+ Banner" width="100%">
+</p>
+
 Advanced Spotify playlist management for Spicetify.
 
 Playlist+ transforms large Spotify playlists into an interactive browsing experience with intelligent genre classification, powerful filtering, smart queue controls, and reusable genre presets.
-
 ---
 
 ## Features
